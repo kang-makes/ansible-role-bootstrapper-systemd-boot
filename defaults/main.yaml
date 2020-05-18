@@ -1,0 +1,38 @@
+---
+root_target: /target
+
+system_uses_uefi: True
+
+chroot_mounts:
+  - src: "proc"
+    path: "/proc"
+    fstype: "proc"
+    opts: "nosuid,noexec,nodev"
+  - src: "sys"
+    path: "/sys"
+    fstype: "sysfs"
+    opts: "nosuid,noexec,nodev,ro"
+  - src: "udev"
+    path: "/dev"
+    fstype: "devtmpfs"
+    opts: "mode=0755,nosuid"
+  - src: "devpts"
+    path: "/dev/pts"
+    fstype: "devpts"
+    opts: "mode=0620,gid=5,nosuid,noexec"
+  - src: "shm"
+    path: "/dev/shm"
+    fstype: "tmpfs"
+    opts: "mode=1777,nosuid,nodev"
+  - src: "tmp"
+    path: "/tmp"
+    fstype: "tmpfs"
+    opts: "mode=1777,strictatime,nodev,nosuid"
+  - src: "efivarfs"
+    path: "/sys/firmware/efi/efivars"
+    fstype: "efivarfs"
+    opts: "nosuid,noexec,nodev"
+  - src: "/run"
+    path: "/run"
+    fstype: "none"
+    opts: "bind"

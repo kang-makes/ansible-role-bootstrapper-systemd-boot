@@ -1,0 +1,42 @@
+---
+- name: Check if system is booted on UEFI Mode
+  assert:
+    that: system_uses_uefi
+    fail_msg: "This sistem has been booted on MBR/CSM mode"
+    success_msg: "This system booted on UEFI Mode"
+
+- name: Installing systemd-boot
+  block:
+  - name: Preparing chroot environment on not bootstrapped systems
+    command:
+      warn: no
+      argv: [ "mount", "{{ item.src }}", "{{ root_target + item.path }}", "-t", "{{ item.fstype }}", "-o", "{{ item.opts }},x-mount.mkdir" ]
+    changed_when: no
+    loop: "{{ chroot_mounts }}"
+    when: not ansible_local.bootstrapped | default(false)
+
+  - name: Mounting filesystems
+    command:
+      warn: no
+      argv: [ "mount", "{{ item.src }}", "{{ item.path }}", "-t", "{{ item.fstype }}", "-o", "{{ item.opts }},x-mount.mkdir" ]
+    changed_when: no
+    loop: "{{ to_mount }}"
+
+  - name: Installing systemd-boot
+    command: "{% if not ansible_local.bootstrapped | default(false) %}chroot {{ root_target }} {% endif %}bootctl install"
+
+  always:
+  - name: Unmounting filesystems previously not mounted
+    command:
+      warn: no
+      argv: [ "umount", "{{ item.path }}" ]
+    changed_when: no
+    loop: "{{ to_mount[::-1] | default ([])}}"
+
+  - name: Unmounting chroot environment on not bootstrapped systems
+    command:
+      warn: no
+      argv: [ "umount", "-l", "{{ root_target + item.path }}" ]
+    changed_when: no
+    loop: "{{ chroot_mounts[::-1] }}"
+    when: not ansible_local.bootstrapped | default(false)
